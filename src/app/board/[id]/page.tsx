@@ -83,16 +83,46 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
   );
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  customer: "customer",
+  jobsite: "job site",
+  po: "PO #",
+  vendor: "vendor",
+  product: "product",
+  colorLot: "color/lot #",
+  qty: "quantity",
+  defectType: "defect type",
+  priority: "priority",
+  jobStopped: "job stopped",
+  description: "description",
+  reportedBy: "reported by",
+  dateReported: "date reported",
+  deliveryDate: "delivery date",
+  bolNumber: "BOL number",
+  rootCause: "root cause",
+  investigatedBy: "investigated by",
+  resolution: "resolution",
+  vendorClaimFiled: "vendor claim filed",
+  claimRmaNumber: "claim/RMA #",
+  creditAmount: "credit amount",
+  closedBy: "closed by",
+  dateClosed: "date closed",
+  notesSubmitted: "submitted",
+  notesReviewed: "reviewed",
+  notesResolved: "resolved",
+};
+
 function describeAudit(action: string, field: string | null): string {
+  const label = field ? (FIELD_LABELS[field] ?? field) : field;
   switch (action) {
     case "created":
       return "created the report";
     case "stage_changed":
       return "changed the stage";
     case "field_updated":
-      return `updated ${field}`;
+      return `updated ${label}`;
     case "note_added":
-      return `added a ${field} note`;
+      return `added a ${label} note`;
     case "photo_added":
       return "added a photo";
     default:

@@ -1,7 +1,7 @@
 import { requireManager } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { NavBar } from "@/components/nav-bar";
-import { DEFECT_TYPE_LABELS, PRIORITY_LABELS, STAGE_LABELS } from "@/lib/validation";
+import { DEFECT_TYPE_LABELS, PRIORITY_LABELS, STAGE_LABELS, STAGE_ORDER } from "@/lib/validation";
 
 export default async function DashboardPage() {
   const session = await requireManager();
@@ -14,6 +14,14 @@ export default async function DashboardPage() {
     prisma.report.aggregate({ _sum: { creditAmount: true } }),
   ]);
 
+  // groupBy omits stages with zero reports entirely — fill those back in so
+  // e.g. a brand-new board still shows "Resolved (0)" instead of nothing.
+  const stageCounts = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0])) as Record<
+    (typeof STAGE_ORDER)[number],
+    number
+  >;
+  for (const row of byStage) stageCounts[row.stage] = row._count;
+
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar session={session} />
@@ -22,8 +30,8 @@ export default async function DashboardPage() {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="Total credits issued" value={`$${(creditTotal._sum.creditAmount ?? 0).toString()}`} />
-          {byStage.map((row) => (
-            <StatCard key={row.stage} label={STAGE_LABELS[row.stage]} value={row._count.toString()} />
+          {STAGE_ORDER.map((stage) => (
+            <StatCard key={stage} label={STAGE_LABELS[stage]} value={stageCounts[stage].toString()} />
           ))}
         </div>
 
