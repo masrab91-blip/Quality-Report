@@ -26,11 +26,22 @@ for PDF generation.
 
 ```bash
 npm install
-cp .env.example .env   # fill in DATABASE_URL, SESSION_SECRET, etc.
-npm run db:migrate     # applies migrations to your Postgres database
-npm run db:seed        # creates the manager account + report-number counter
+cp .env.example .env    # fill in DATABASE_URL, SESSION_SECRET, etc.
+npm run db:deploy       # applies the checked-in migration to your Postgres database
+npm run db:seed         # creates the manager account + report-number counter
 npm run dev
 ```
+
+(`db:deploy` runs `prisma migrate deploy` — applies the existing migration in
+`prisma/migrations/` as-is, no shadow database required. Once you're iterating on the
+schema yourself, use `npm run db:migrate` — `prisma migrate dev` — instead, which needs a
+reachable Postgres to diff against.)
+
+The initial migration and Prisma Client were generated and type-checked in a sandboxed
+build environment with no route to a live Postgres instance, so schema/migration
+correctness is verified by `prisma migrate diff`'s SQL output and `tsc`/`next build`, not
+by an actual `migrate deploy` run — run it once against your real database and skim the
+output before relying on it in production.
 
 Sign in at `/login` with the seeded manager credentials (`MANAGER_EMAIL` /
 `MANAGER_PASSWORD` in `.env`, default `marcs@beldenae.com` / `ChangeMe123!` — change this
