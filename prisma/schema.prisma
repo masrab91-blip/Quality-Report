@@ -1,0 +1,140 @@
+// Quality Issue Tracker — data model
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUBMITTER
+  MANAGER
+}
+
+enum Stage {
+  SUBMITTED
+  REVIEWED
+  RESOLVED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum DefectType {
+  CHIPPED_CRACKED
+  WRONG_COLOR_SHADE
+  WRONG_PRODUCT_SHIPPED
+  SHORT_OVER_SHIPMENT
+  DAMAGED_IN_TRANSIT
+  EFFLORESCENCE_STAINING
+  DIMENSIONAL_SIZE_ISSUE
+  OTHER
+}
+
+// Singleton-per-key counter used to mint sequential, human-readable report
+// numbers (QR-0001, QR-0002, ...). Incremented atomically via a single
+// UPDATE ... SET value = value + 1, so concurrent submissions never collide.
+model Counter {
+  id    String @id
+  value Int    @default(0)
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(SUBMITTER)
+  createdAt    DateTime @default(now())
+
+  reportsSubmitted Report[]   @relation("SubmittedBy")
+  auditLogs        AuditLog[]
+}
+
+model Report {
+  id           String @id @default(cuid())
+  reportNumber String @unique // human-readable sequential: QR-0001
+
+  stage    Stage      @default(SUBMITTED)
+  priority Priority
+  jobStopped Boolean  @default(false)
+
+  customer    String
+  jobsite     String?
+  po          String?
+  vendor      String?
+  product     String?
+  colorLot    String?
+  qty         Int?
+  defectType  DefectType
+  description String
+
+  // Excel tracking log fields (vendor-claim workflow)
+  reportedBy       String?
+  dateReported     DateTime?
+  deliveryDate     DateTime?
+  bolNumber        String?
+  rootCause        String?
+  investigatedBy   String?
+  resolution       String?
+  vendorClaimFiled Boolean   @default(false)
+  claimRmaNumber   String?
+  creditAmount     Decimal?  @db.Decimal(10, 2)
+  closedBy         String?
+  dateClosed       DateTime?
+
+  // One notes field per stage — never overwritten, only appended to
+  notesSubmitted String?
+  notesReviewed  String?
+  notesResolved  String?
+
+  submittedById String
+  submittedBy   User   @relation("SubmittedBy", fields: [submittedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos    Photo[]
+  auditLogs AuditLog[]
+
+  @@index([stage])
+  @@index([vendor])
+  @@index([defectType])
+  @@index([priority])
+  @@index([submittedById])
+}
+
+model Photo {
+  id          String   @id @default(cuid())
+  reportId    String
+  report      Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  key         String // object storage key
+  contentType String
+  size        Int
+  uploadedAt  DateTime @default(now())
+
+  @@index([reportId])
+}
+
+// Append-only. Nothing in application code ever updates or deletes a row here.
+model AuditLog {
+  id       String   @id @default(cuid())
+  reportId String
+  report   Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  action   String // e.g. "created", "field_updated", "stage_changed", "note_added", "photo_added"
+  field    String?
+  oldValue String?
+  newValue String?
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
+  @@index([createdAt])
+}
