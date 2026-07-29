@@ -76,7 +76,7 @@ model Report {
   description String
 
   // Excel tracking log fields (vendor-claim workflow)
-  reportedBy       String?
+  reportedBy       String // typed by the submitter — there's no login to derive it from
   dateReported     DateTime?
   deliveryDate     DateTime?
   bolNumber        String?
@@ -94,8 +94,10 @@ model Report {
   notesReviewed  String?
   notesResolved  String?
 
-  submittedById String
-  submittedBy   User   @relation("SubmittedBy", fields: [submittedById], references: [id])
+  // Optional: submission is open to anyone, no account required. Only set
+  // when a signed-in manager happens to be the one filing the report.
+  submittedById String?
+  submittedBy   User?   @relation("SubmittedBy", fields: [submittedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,8 +129,11 @@ model AuditLog {
   id       String   @id @default(cuid())
   reportId String
   report   Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  userId   String
-  user     User     @relation(fields: [userId], references: [id])
+  // Anonymous submissions have no User row to point at — actorName carries
+  // the typed name instead. Exactly one of userId/actorName is set.
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id])
+  actorName String?
   action   String // e.g. "created", "field_updated", "stage_changed", "note_added", "photo_added"
   field    String?
   oldValue String?

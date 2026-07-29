@@ -10,14 +10,13 @@ export function UserForm() {
 
   return (
     <form action={action} className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input name="name" placeholder="Full name" required className={inputClass} />
         <input name="email" type="email" placeholder="Email" required className={inputClass} />
-        <select name="role" defaultValue="SUBMITTER" className={inputClass}>
-          <option value="SUBMITTER">Submitter</option>
-          <option value="MANAGER">Manager</option>
-        </select>
       </div>
+      <p className="text-xs text-slate-500">
+        Report submission needs no account — this only creates another manager login for the board.
+      </p>
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
       {state?.generatedPassword && (
         <p className="rounded-lg bg-green-50 p-3 text-sm text-green-800">

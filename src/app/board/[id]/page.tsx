@@ -16,7 +16,6 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
     where: { id },
     include: {
       photos: true,
-      submittedBy: true,
       auditLogs: { orderBy: { createdAt: "desc" }, include: { user: true } },
     },
   });
@@ -36,7 +35,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           <StageSelect reportId={report.id} stage={report.stage} />
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          Submitted by {report.submittedBy.name} on {report.createdAt.toLocaleString("en-US")}
+          Submitted by {report.reportedBy} on {report.createdAt.toLocaleString("en-US")}
         </p>
 
         {photoUrls.length > 0 && (
@@ -65,7 +64,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           <ul className="mt-3 space-y-2 text-xs text-slate-600">
             {report.auditLogs.map((log) => (
               <li key={log.id} className="border-b border-slate-100 pb-2 last:border-0">
-                <span className="font-medium text-slate-800">{log.user.name}</span>{" "}
+                <span className="font-medium text-slate-800">{log.user?.name ?? log.actorName ?? "Someone"}</span>{" "}
                 {describeAudit(log.action, log.field)}
                 {log.field && log.action === "field_updated" && (
                   <span className="text-slate-500">

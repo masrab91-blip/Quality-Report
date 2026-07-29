@@ -10,10 +10,12 @@ A quality complaint moves through three stages — **Submitted → Reviewed → 
 and carries three separate notes fields (one per stage) so context accumulates instead of
 overwriting earlier notes.
 
-- **Submitters** (yard staff, drivers, sales) file an intake report with photos. They can
-  see only their own reports afterward, and can't edit them once submitted.
-- **Managers** see a Kanban board of every report, can edit any field, move reports
-  between stages, and add notes at each stage.
+- **Anyone** (yard staff, drivers, sales) can file an intake report with photos at
+  `/report/new` — no account, no login. They type their own name on the form, which is
+  what shows up as "reported by" everywhere.
+- **Managers** sign in at `/login` to see a Kanban board of every report, edit any field,
+  move reports between stages, and add notes at each stage. Manager accounts are created
+  from `/users` by an existing manager.
 
 ## Tech stack
 
@@ -59,11 +61,11 @@ npm run dev
 local Docker default and skips starting Docker, running the same migrate+seed steps
 against your database instead — so it's fine to run either way.
 
-New submitter/manager accounts are created from `/users` (manager-only) — there's no
-self-registration, since this is an internal-only tool. Account creation generates a
-one-time temporary password; a proper "force password change on first login" flow and a
-self-service "change my password" page are the natural next additions (see Known
-limitations).
+New manager accounts are created from `/users` (manager-only) — there's no
+self-registration for managers, and no account at all needed to submit a report. Account
+creation generates a one-time temporary password; a proper "force password change on
+first login" flow and a self-service "change my password" page are the natural next
+additions (see Known limitations).
 
 ### Scripts
 
@@ -121,15 +123,19 @@ You only need to repeat step 6 when the schema changes (i.e. new migrations show
 
 ## Architecture notes
 
-- **Auth**: email/password today (`src/lib/auth-actions.ts`, `src/lib/session.ts`), with
-  bcrypt-hashed passwords and signed JWT session cookies. `src/lib/dal.ts`'s
-  `verifySession`/`requireManager` re-check the user's role against the database on every
-  call (not just the cookie's claim), so a role change takes effect immediately rather
-  than waiting out the session's 7-day expiry. `src/proxy.ts` (Next 16's renamed
-  Middleware) does a cheap redirect based on the cookie for UX; the DAL is what actually
-  enforces authorization on every request. Microsoft Entra ID SSO is the planned next
-  step — swap `auth-actions.ts`/`session.ts` for an OIDC flow against Entra ID and keep
-  the same `SessionPayload` shape so the rest of the app is unaffected.
+- **Auth**: report submission (`/report/new`, `/report/[id]`, the photo presign route)
+  requires no account at all — the submitter just types their own name, captured in
+  `Report.reportedBy` and echoed into the audit log's `actorName` field. Only the manager
+  board (`/board`, `/dashboard`, `/users`) is gated, via email/password
+  (`src/lib/auth-actions.ts`, `src/lib/session.ts`) with bcrypt-hashed passwords and
+  signed JWT session cookies. `src/lib/dal.ts`'s `requireManager` re-checks the user's
+  role against the database on every call (not just the cookie's claim), so a role change
+  takes effect immediately rather than waiting out the session's 7-day expiry.
+  `src/proxy.ts` (Next 16's renamed Middleware) does a cheap redirect based on the cookie
+  for UX; the DAL is what actually enforces authorization on every request. Microsoft
+  Entra ID SSO remains a future option for the manager side — swap
+  `auth-actions.ts`/`session.ts` for an OIDC flow against Entra ID and keep the same
+  `SessionPayload` shape so the rest of the app is unaffected.
 - **Audit log** (`src/lib/audit.ts`, `AuditLog` model): append-only by convention —
   nothing in the codebase updates or deletes a row. Every report creation, field edit,
   stage change, and note addition writes an entry inside the same transaction as the
@@ -156,9 +162,12 @@ You only need to repeat step 6 when the schema changes (i.e. new migrations show
 
 ## Known limitations / next steps
 
-- **Auth**: simple email/password now; Entra ID/M365 SSO was the brief's stated
-  preference and is the natural next step once tenant/app-registration details are
-  available (see Architecture notes above for the swap point).
+- **Auth**: report submission is intentionally open to anyone with the link — there's no
+  identity verification on who typed a given name, and no rate limiting on submission or
+  photo upload. Fine for an internal tool on an unlisted URL; revisit if this ever needs
+  to resist abuse. Manager login is simple email/password today; Entra ID/M365 SSO was
+  the brief's original preference and is a natural next step for the manager side (see
+  Architecture notes above for the swap point).
 - **Password lifecycle**: `/users` generates a temporary password on account creation but
   there's no forced-change-on-first-login flow or self-service password change yet.
 - **Retention**: reports and photos are kept indefinitely (quality complaints can become

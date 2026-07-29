@@ -15,7 +15,10 @@ export async function logAudit(
   tx: Prisma.TransactionClient,
   entry: {
     reportId: string;
-    userId: string;
+    // Exactly one of these identifies who did it: userId for a signed-in
+    // manager, actorName for an anonymous submitter's typed name.
+    userId?: string | null;
+    actorName?: string | null;
     action: AuditAction;
     field?: string;
     oldValue?: string | null;
@@ -25,7 +28,8 @@ export async function logAudit(
   await tx.auditLog.create({
     data: {
       reportId: entry.reportId,
-      userId: entry.userId,
+      userId: entry.userId ?? null,
+      actorName: entry.actorName ?? null,
       action: entry.action,
       field: entry.field,
       oldValue: entry.oldValue ?? null,

@@ -112,9 +112,9 @@ export function EditForm({ report }: { report: Report }) {
         <legend className="mb-2 text-sm font-semibold text-slate-800">Vendor claim / closeout</legend>
         <div>
           <label className={labelClass} htmlFor="reportedBy">
-            Reported by
+            Reported by *
           </label>
-          <input id="reportedBy" name="reportedBy" defaultValue={report.reportedBy ?? ""} className={inputClass} />
+          <input id="reportedBy" name="reportedBy" required defaultValue={report.reportedBy} className={inputClass} />
         </div>
         <div>
           <label className={labelClass} htmlFor="dateReported">

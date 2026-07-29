@@ -35,14 +35,27 @@ const MAX_PHOTOS = 10;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 
+// A blank optional number input submits as "" in FormData, and z.coerce.number()
+// turns "" into 0 (not undefined) — which then fails .positive(). Strip blanks
+// before coercion so leaving an optional number field empty actually works.
+const optionalPositiveInt = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.coerce.number().int().positive().optional(),
+);
+const optionalNonnegativeNumber = z.preprocess(
+  (val) => (val === "" ? undefined : val),
+  z.coerce.number().nonnegative().optional(),
+);
+
 export const intakeSchema = z.object({
+  reportedBy: z.string().trim().min(1, "Your name is required"),
   customer: z.string().trim().min(1, "Customer is required"),
   jobsite: z.string().trim().optional(),
   po: z.string().trim().optional(),
   vendor: z.string().trim().optional(),
   product: z.string().trim().optional(),
   colorLot: z.string().trim().optional(),
-  qty: z.coerce.number().int().positive().optional(),
+  qty: optionalPositiveInt,
   defectType: z.enum(defectTypeValues),
   priority: z.enum(priorityValues),
   jobStopped: z.coerce.boolean().default(false),
@@ -58,12 +71,12 @@ export const reportEditSchema = z.object({
   vendor: z.string().trim().optional(),
   product: z.string().trim().optional(),
   colorLot: z.string().trim().optional(),
-  qty: z.coerce.number().int().positive().optional(),
+  qty: optionalPositiveInt,
   defectType: z.enum(defectTypeValues),
   priority: z.enum(priorityValues),
   jobStopped: z.coerce.boolean().default(false),
   description: z.string().trim().min(1, "Description is required"),
-  reportedBy: z.string().trim().optional(),
+  reportedBy: z.string().trim().min(1, "Reported by is required"),
   dateReported: z.string().trim().optional(),
   deliveryDate: z.string().trim().optional(),
   bolNumber: z.string().trim().optional(),
@@ -72,7 +85,7 @@ export const reportEditSchema = z.object({
   resolution: z.string().trim().optional(),
   vendorClaimFiled: z.coerce.boolean().default(false),
   claimRmaNumber: z.string().trim().optional(),
-  creditAmount: z.coerce.number().nonnegative().optional(),
+  creditAmount: optionalNonnegativeNumber,
   closedBy: z.string().trim().optional(),
   dateClosed: z.string().trim().optional(),
 });

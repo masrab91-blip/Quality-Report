@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { verifySession } from "@/lib/dal";
 import { isStorageConfigured, presignPhotoUpload } from "@/lib/storage";
 
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
+// Open to anyone — report submission itself requires no account.
 export async function POST(req: Request) {
-  await verifySession(); // any authenticated user may attach photos to a report
-
   if (!isStorageConfigured()) {
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
   }

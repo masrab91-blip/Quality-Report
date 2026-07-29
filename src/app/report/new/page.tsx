@@ -1,15 +1,14 @@
-import { verifySession } from "@/lib/dal";
 import { isStorageConfigured } from "@/lib/storage";
-import { NavBar } from "@/components/nav-bar";
+import { PublicHeader } from "@/components/public-header";
 import { IntakeForm } from "./intake-form";
 
+// Open to anyone — no account required.
 export default async function NewReportPage() {
-  const session = await verifySession();
   const storageConfigured = isStorageConfigured();
 
   return (
     <div className="flex min-h-screen flex-col">
-      <NavBar session={session} />
+      <PublicHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
         <h1 className="text-xl font-semibold text-slate-900">New quality issue report</h1>
         <p className="mt-1 text-sm text-slate-500">

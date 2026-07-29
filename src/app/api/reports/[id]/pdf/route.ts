@@ -1,16 +1,15 @@
 import { notFound } from "next/navigation";
-import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { getPhotoBuffer, isStorageConfigured } from "@/lib/storage";
 import { renderReportPdf, type PdfPhoto } from "@/lib/pdf";
 
+// Same trust model as the public report detail page: anyone with the link
+// (or the report id) can fetch the PDF, no account required.
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await verifySession();
 
   const report = await prisma.report.findUnique({ where: { id }, include: { photos: true } });
   if (!report) notFound();
-  if (session.role !== "MANAGER" && report.submittedById !== session.userId) notFound();
 
   const photos: PdfPhoto[] = [];
   if (isStorageConfigured()) {

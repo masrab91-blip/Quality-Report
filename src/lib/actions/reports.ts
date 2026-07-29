@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifySession, requireManager } from "@/lib/dal";
+import { requireManager } from "@/lib/dal";
 import { logAudit } from "@/lib/audit";
 import { nextReportNumber } from "@/lib/report-number";
 import { intakeSchema, reportEditSchema } from "@/lib/validation";
@@ -28,9 +28,8 @@ function parsePhotoRefs(formData: FormData) {
   }
 }
 
+// Open to anyone — no account required. Only the manager board is gated.
 export async function createReportAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const session = await verifySession();
-
   if (formData.get("photosUploading") === "1") {
     return { error: "Wait for photo uploads to finish before submitting." };
   }
@@ -61,15 +60,14 @@ export async function createReportAction(_prevState: ActionState, formData: Form
         jobStopped: data.jobStopped,
         description: data.description,
         notesSubmitted: notes || null,
-        reportedBy: session.name,
+        reportedBy: data.reportedBy,
         dateReported: new Date(),
-        submittedById: session.userId,
         photos: {
           create: photos.map((p) => ({ key: p.key, contentType: p.contentType, size: p.size })),
         },
       },
     });
-    await logAudit(tx, { reportId: created.id, userId: session.userId, action: "created" });
+    await logAudit(tx, { reportId: created.id, actorName: data.reportedBy, action: "created" });
     return created;
   });
 
@@ -123,7 +121,7 @@ export async function updateReportAction(reportId: string, _prevState: ActionSta
     priority: data.priority,
     jobStopped: data.jobStopped,
     description: data.description,
-    reportedBy: data.reportedBy || null,
+    reportedBy: data.reportedBy,
     dateReported: data.dateReported ? new Date(data.dateReported) : null,
     deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : null,
     bolNumber: data.bolNumber || null,

@@ -12,7 +12,6 @@ export type CreateUserState = { error?: string; generatedPassword?: string } | u
 const createUserSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
-  role: z.enum(["SUBMITTER", "MANAGER"]),
 });
 
 function generateTempPassword(): string {
@@ -35,8 +34,9 @@ export async function createUserAction(_prevState: CreateUserState, formData: Fo
   const tempPassword = generateTempPassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
+  // Only managers have accounts now — submission needs no login at all.
   await prisma.user.create({
-    data: { name: parsed.data.name, email: parsed.data.email, role: parsed.data.role, passwordHash },
+    data: { name: parsed.data.name, email: parsed.data.email, role: "MANAGER", passwordHash },
   });
 
   revalidatePath("/users");

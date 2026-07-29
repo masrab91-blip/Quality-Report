@@ -1,19 +1,21 @@
 import { notFound, redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getPhotoUrl, isStorageConfigured } from "@/lib/storage";
-import { NavBar } from "@/components/nav-bar";
+import { PublicHeader } from "@/components/public-header";
 import { StageBadge, PriorityBadge } from "@/components/badges";
 import { DEFECT_TYPE_LABELS } from "@/lib/validation";
 
+// Public confirmation/status page — anyone with the link (e.g. the person
+// who submitted it) can view it read-only. A signed-in manager gets bounced
+// to the editable board view instead.
 export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await verifySession();
-  const report = await prisma.report.findUnique({ where: { id }, include: { photos: true } });
+  const session = await getSession();
+  if (session) redirect(`/board/${id}`);
 
+  const report = await prisma.report.findUnique({ where: { id }, include: { photos: true } });
   if (!report) notFound();
-  if (session.role === "MANAGER") redirect(`/board/${id}`);
-  if (report.submittedById !== session.userId) notFound();
 
   const photoUrls = isStorageConfigured()
     ? await Promise.all(report.photos.map((p) => getPhotoUrl(p.key)))
@@ -21,7 +23,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="flex min-h-screen flex-col">
-      <NavBar session={session} />
+      <PublicHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-slate-900">{report.reportNumber}</h1>

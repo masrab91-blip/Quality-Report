@@ -14,6 +14,12 @@ export function IntakeForm({ storageConfigured }: { storageConfigured: boolean }
 
   return (
     <form action={action} className="space-y-5">
+      <div>
+        <label className={labelClass} htmlFor="reportedBy">
+          Your name *
+        </label>
+        <input id="reportedBy" name="reportedBy" required className={inputClass} />
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass} htmlFor="customer">

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 
-const PROTECTED_PREFIXES = ["/report", "/board", "/users"];
+// Report submission is open to anyone — only the manager board is gated.
+const PROTECTED_PREFIXES = ["/board", "/users", "/dashboard"];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -14,13 +15,14 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
+  // Only managers have accounts/sessions now — any signed-in visitor is a manager.
   if (isLoginRoute && session) {
-    return NextResponse.redirect(new URL(session.role === "MANAGER" ? "/board" : "/report/new", req.nextUrl));
+    return NextResponse.redirect(new URL("/board", req.nextUrl));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/report/:path*", "/board/:path*", "/users/:path*", "/login"],
+  matcher: ["/board/:path*", "/users/:path*", "/dashboard/:path*", "/login"],
 };
