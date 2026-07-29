@@ -17,8 +17,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       try {
         const buffer = await getPhotoBuffer(photo.key);
         photos.push({ buffer, contentType: photo.contentType });
-      } catch {
+      } catch (err) {
         // Skip photos that can't be fetched rather than failing the whole PDF.
+        console.error(`Couldn't fetch photo ${photo.key} for PDF:`, err);
       }
     }
   }
