@@ -11,6 +11,7 @@ import { intakeSchema, reportEditSchema } from "@/lib/validation";
 import { getPhotoBuffer, isStorageConfigured } from "@/lib/storage";
 import { renderReportPdf, type PdfPhoto } from "@/lib/pdf";
 import { sendSubmissionEmail } from "@/lib/email";
+import { formatDateTime } from "@/lib/format";
 import type { Report, Stage } from "@/generated/prisma/client";
 
 export type ActionState = { error?: string } | undefined;
@@ -208,7 +209,7 @@ export async function addNoteAction(
   }
 
   const existingText = (existing as unknown as Record<string, string | null>)[field];
-  const entry = `[${new Date().toLocaleString("en-US")} — ${session.name}] ${text}`;
+  const entry = `[${formatDateTime(new Date())} — ${session.name}] ${text}`;
   const combined = existingText ? `${existingText}\n\n${entry}` : entry;
 
   await prisma.$transaction(async (tx) => {

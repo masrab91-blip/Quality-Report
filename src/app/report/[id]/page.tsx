@@ -5,6 +5,7 @@ import { getPhotoUrl, isStorageConfigured } from "@/lib/storage";
 import { PublicHeader } from "@/components/public-header";
 import { StageBadge, PriorityBadge } from "@/components/badges";
 import { DEFECT_TYPE_LABELS } from "@/lib/validation";
+import { formatDateTime } from "@/lib/format";
 
 // Public confirmation/status page — anyone with the link (e.g. the person
 // who submitted it) can view it read-only. A signed-in manager gets bounced
@@ -25,13 +26,20 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
     <div className="flex min-h-screen flex-col">
       <PublicHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-semibold text-slate-900">{report.reportNumber}</h1>
           <StageBadge stage={report.stage} />
           <PriorityBadge priority={report.priority} />
+          <a
+            href={`/api/reports/${report.id}/pdf`}
+            download
+            className="ml-auto rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Download PDF
+          </a>
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          Submitted {report.createdAt.toLocaleString("en-US")} — this view is read-only after submission.
+          Submitted {formatDateTime(report.createdAt)} — this view is read-only after submission.
         </p>
 
         <div className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm text-sm">

@@ -2,6 +2,7 @@ import "server-only";
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import type { Report } from "@/generated/prisma/client";
 import { DEFECT_TYPE_LABELS, PRIORITY_LABELS } from "@/lib/validation";
+import { formatDateTime } from "@/lib/format";
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: "Helvetica" },
@@ -36,7 +37,7 @@ export async function renderReportPdf(report: Report, photos: PdfPhoto[] = []): 
         <Text style={styles.title}>Quality Issue Report {report.reportNumber}</Text>
         <Text style={styles.subtitle}>
           Stage: {report.stage} · Priority: {PRIORITY_LABELS[report.priority]} · Submitted{" "}
-          {report.createdAt.toLocaleString("en-US")}
+          {formatDateTime(report.createdAt)}
         </Text>
 
         <View style={styles.section}>

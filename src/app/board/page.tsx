@@ -5,6 +5,7 @@ import { NavBar } from "@/components/nav-bar";
 import { PriorityBadge } from "@/components/badges";
 import { StageSelect } from "@/components/stage-select";
 import { DEFECT_TYPE_LABELS, STAGE_LABELS, STAGE_ORDER } from "@/lib/validation";
+import { formatDate } from "@/lib/format";
 import type { Prisma } from "@/generated/prisma/client";
 
 export default async function BoardPage({
@@ -109,7 +110,7 @@ export default async function BoardPage({
                       <p className="mt-1 text-xs font-medium text-red-700">⚠ Job stopped</p>
                     )}
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">{report.createdAt.toLocaleDateString("en-US")}</span>
+                      <span className="text-xs text-slate-400">{formatDate(report.createdAt)}</span>
                       <StageSelect reportId={report.id} stage={report.stage} />
                     </div>
                   </Link>

@@ -5,6 +5,7 @@ import { getPhotoUrl, isStorageConfigured } from "@/lib/storage";
 import { NavBar } from "@/components/nav-bar";
 import { StageBadge } from "@/components/badges";
 import { StageSelect } from "@/components/stage-select";
+import { formatDateTime } from "@/lib/format";
 import { EditForm } from "./edit-form";
 import { NoteSection } from "./note-section";
 
@@ -35,7 +36,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           <StageSelect reportId={report.id} stage={report.stage} />
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          Submitted by {report.reportedBy} on {report.createdAt.toLocaleString("en-US")}
+          Submitted by {report.reportedBy} on {formatDateTime(report.createdAt)}
         </p>
 
         {photoUrls.length > 0 && (
@@ -72,7 +73,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
                     ({log.oldValue ?? "—"} → {log.newValue ?? "—"})
                   </span>
                 )}
-                <span className="ml-2 text-slate-400">{log.createdAt.toLocaleString("en-US")}</span>
+                <span className="ml-2 text-slate-400">{formatDateTime(log.createdAt)}</span>
               </li>
             ))}
           </ul>
